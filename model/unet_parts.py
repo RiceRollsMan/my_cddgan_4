@@ -30,7 +30,7 @@ class AttnBlock(nn.Module):
         self.out = nn.Linear(hidden_dim, self.latent_dim_dim)
 
     def forward(self, latent, text):
-        text = text.reshape(text.shape[0], 8, 32, 48)
+        text = text.reshape(text.shape[0], 8, 8, 48)
         text = self.text_in(text)
         text = torch.flatten(text, start_dim=2)
 

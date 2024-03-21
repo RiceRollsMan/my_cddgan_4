@@ -25,31 +25,31 @@ class UNet(nn.Module):
 
         self.inc = (DoubleConv(in_channels, 64))
 
-        self.ca1 = (AttnBlock(64, 64, 1024, 8, 1536))
+        self.ca1 = (AttnBlock(64, 64, 1024, 8, 384))
         self.down1 = (Down(64, 128))
 
-        self.ca2 = (AttnBlock(128, 32, 1024, 8, 1536))
+        self.ca2 = (AttnBlock(128, 32, 512, 8, 384))
         self.down2 = (Down(128, 256))
 
-        self.ca3 = (AttnBlock(256, 16, 1025, 8, 1536))
+        self.ca3 = (AttnBlock(256, 16, 256, 8, 384))
         self.down3 = (Down(256, 512))
 
-        self.ca4 = (AttnBlock(512, 8, 256, 8, 1536))
+        self.ca4 = (AttnBlock(512, 8, 256, 8, 384))
         self.down4 = (Down(512, 1024))
 
-        self.ca5 = (AttnBlock(1024, 4, 256, 8, 1536))
+        self.ca5 = (AttnBlock(1024, 4, 256, 8, 384))
 
         self.up1 = (Up(1024, 512, bilinear))
-        self.ca6 = (AttnBlock(512, 8, 256, 8, 1536))
+        self.ca6 = (AttnBlock(512, 8, 256, 8, 384))
 
         self.up2 = (Up(512, 256, bilinear))
-        self.ca7 = (AttnBlock(256, 16, 1024, 8, 1536))
+        self.ca7 = (AttnBlock(256, 16, 256, 8, 384))
 
         self.up3 = (Up(256, 128, bilinear))
-        self.ca8 = (AttnBlock(128, 32, 1024, 8, 1536))
+        self.ca8 = (AttnBlock(128, 32, 512, 8, 384))
 
         self.up4 = (Up(128, 64, bilinear))
-        self.ca9 = (AttnBlock(64, 64, 1024, 8, 1536))
+        self.ca9 = (AttnBlock(64, 64, 1024, 8, 384))
 
         self.up5 = nn.Conv2d(64, 4, kernel_size=1)
 
@@ -92,11 +92,11 @@ class TextFeatureVGG(nn.Module):
         self.main = vgg_block(in_channels=in_channels)
 
     def forward(self, text):
-        # b, 1, 512, 768
+        # b, 1, 128, 768
         text_features = self.main(text)
-        # b, 8, 32, 48
+        # b, 8, 8, 48
         text_features_reshape = torch.flatten(text_features, start_dim=2)
-        # b, 8, 1536
+        # b, 8, 384
         return text_features_reshape
 
 
@@ -143,16 +143,13 @@ class T2IGenerator(nn.Module):
 
         self.decoder = latent_decoder(self.latent_channel, self.latent_dim, self.img_channel, self.img_size)
 
-    def forward(self, text):
+    def forward(self, text, latent):
         text_features = self.textFeatures(text)
-
-        latent = torch.randn([text.shape[0], self.latent_channel, self.latent_dim, self.latent_dim]).cuda()
 
         unet_out = self.unet(latent, text_features)
 
         img = self.decoder(unet_out)
         return img
-
 
 # modelConfig = {
 #     "state": "train",  # train or test

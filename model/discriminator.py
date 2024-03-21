@@ -25,11 +25,15 @@ class T2IDiscriminator(nn.Module):
     def __init__(self, labels_channel=1, img_channel=3, modelConfig=None):
         super(T2IDiscriminator, self).__init__()
         self.text_ch = nn.Conv2d(in_channels=labels_channel, out_channels=img_channel, kernel_size=1)
-        self.text_dim_two = nn.Linear(768, 512)
+        self.text_dim_two = nn.Sequential(
+            nn.Linear(768, 512),
+            nn.ReLU(),
+            nn.Linear(512, 128)
+        )
 
-        self.text_down_sample = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.text_up_sample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
-        self.get_score = vgg_block(in_channels=img_channel)
+        self.get_score = vgg_block(in_channels=img_channel+1)
 
         self.classifier = nn.Sequential(
             nn.Linear(16 * 16 * 16, 512),
@@ -42,11 +46,11 @@ class T2IDiscriminator(nn.Module):
         )
 
     def forward(self, image, text):
-        text = self.text_ch(text)
+        # text = self.text_ch(text)
         text = self.text_dim_two(text)
-        text = self.text_down_sample(text)
+        text = self.text_up_sample(text)
 
-        combine_tensor = image + text
+        combine_tensor = torch.cat((text, image), dim=1)
         combine_tensor = self.get_score(combine_tensor)
         combine_tensor = torch.flatten(combine_tensor, start_dim=1)
 

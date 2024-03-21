@@ -16,7 +16,7 @@ def main(dataset='xray'):
             # label
             "label_channel": 1,
             "label_features_channel": 8,
-            "label_seq_length": 512,
+            "label_seq_length": 128,
             "label_embedding_dim": 768,
             # latent
             "latent_channel": 4,
@@ -24,7 +24,7 @@ def main(dataset='xray'):
             # time_steps
             "num_time_steps": 4,
             # optimizer
-            "lr_g": 5e-5,
+            "lr_g": 1e-4,
             "lr_d": 5e-5,
             "beta_min": 0.1,
             "beta_max": 20,
